@@ -19,6 +19,7 @@ import { ContentModule } from "./services/content.js";
 import { FilesModule } from "./services/files.js";
 import { FormsModule } from "./services/forms.js";
 import { ProductsModule } from "./services/products.js";
+import { LocationsModule } from "./services/locations.js";
 
 /** The one platform this SDK will ever speak for. */
 export const PLATFORM_SLUG = "dispensary-local-seo";
@@ -92,6 +93,7 @@ export class SiteClient {
     this.files = new FilesModule(this);
     this.forms = new FormsModule(this);
     this.products = new ProductsModule(this);
+    this.locations = new LocationsModule(this);
   }
 
   get isServerSide() {

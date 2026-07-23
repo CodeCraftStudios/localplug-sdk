@@ -93,6 +93,8 @@ export interface ProductVariantOption {
   name: string;
   /** Absent/null means the product's base price applies. */
   price?: number | null;
+  /** Optional option-specific image URL (e.g. a flavor shot). */
+  image?: string;
   [key: string]: unknown;
 }
 
@@ -110,11 +112,15 @@ export interface ProductRecord {
   data: {
     slug?: string;
     site?: string;
+    /** The dashboard project this product is managed under. */
+    project?: string;
     name?: string;
     category?: string;
     price?: number | string;
     compare_at_price?: number | string;
     description?: string;
+    /** The hero shot — lead with this; fall back to images[0]. */
+    main_image?: ProductImage | null;
     images?: ProductImage[];
     variants?: ProductVariant[];
     [key: string]: unknown;
@@ -169,6 +175,28 @@ export declare class FormsModule {
   ): Promise<{ created: true; id?: string }>;
 }
 
+export interface SiteLocation {
+  name: string;
+  address: string;
+  phone: string;
+  email: string;
+  /** Free text, typically one line per day. */
+  hours: string;
+  /** Google Business Profile link. */
+  gbp_url: string;
+  /** Google Maps / directions link. */
+  maps_url: string;
+  image_url: string;
+}
+
+export declare class LocationsModule {
+  constructor(client: SiteClient);
+  /** The full payload: business name + locations. */
+  get(): Promise<{ business_name: string; locations: SiteLocation[] }>;
+  /** Just the locations array — [] when nothing is filled in yet. */
+  list(): Promise<SiteLocation[]>;
+}
+
 export declare class ProductsModule {
   constructor(client: SiteClient);
   list(query?: {
@@ -196,6 +224,7 @@ export declare class SiteClient {
   files: FilesModule;
   forms: FormsModule;
   products: ProductsModule;
+  locations: LocationsModule;
 
   whoami(): Promise<SiteWhoami>;
 }
