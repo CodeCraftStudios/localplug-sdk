@@ -48,14 +48,22 @@ export interface ContentRecord {
 export interface SiteFile {
   id: string;
   name: string;
+  /** Platform-wide unique handle (may be ""). Per-location labels live in metadata.label. */
   label: string;
   url: string;
   content_type: string;
   size_bytes: number;
   alt: string;
+  /** Key-value stamps — e.g. { location: "loc_…", label: "cover" }. */
+  metadata: Record<string, unknown>;
   customer: string | null;
   website_record: string | null;
   created_at: string | null;
+  /** Blur-up placeholder + responsive WebP variants, when generated. */
+  lqip?: string | null;
+  variants_ready?: boolean;
+  variants?: Record<string, { width: number; url: string }[]>;
+  [key: string]: unknown;
 }
 
 export interface FormField {
@@ -195,6 +203,13 @@ export declare class LocationsModule {
   get(): Promise<{ business_name: string; locations: SiteLocation[] }>;
   /** Just the locations array — [] when nothing is filled in yet. */
   list(): Promise<SiteLocation[]>;
+  /**
+   * One file by its dashboard-assigned label ("cover", "menu"), or null.
+   * Labels are per-location — pass locationId on multi-location sites.
+   */
+  getFile(label: string, locationId?: string): Promise<SiteFile | null>;
+  /** The labeled file's CDN url, or null. */
+  getFileUrl(label: string, locationId?: string): Promise<string | null>;
 }
 
 export declare class ProductsModule {

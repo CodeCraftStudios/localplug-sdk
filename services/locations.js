@@ -30,4 +30,38 @@ export class LocationsModule {
     const { locations } = await this.get();
     return locations ?? [];
   }
+
+  /**
+   * One file by its label — the identifier the dashboard put on it
+   * ("cover", "menu"). Returns the file object (its `url` is a permanent CDN
+   * link) or null if nothing carries that label.
+   *
+   * Labels are per-LOCATION, so on a multi-location site pass the location id
+   * to disambiguate; without it the first match across locations wins (which
+   * is exactly right for single-location clients).
+   *
+   * @param {string} label
+   * @param {string} [locationId]
+   *
+   * @example
+   * const cover = await lps.locations.getFile("cover");
+   * const ftwCover = await lps.locations.getFile("cover", ftw.id);
+   */
+  async getFile(label, locationId) {
+    const locations = await this.list();
+    for (const location of locations) {
+      if (locationId && location.id !== locationId) continue;
+      const hit = (location.files ?? []).find(
+        (f) => (f.metadata && f.metadata.label) === label
+      );
+      if (hit) return hit;
+    }
+    return null;
+  }
+
+  /** Convenience: the labeled file's CDN url, or null. */
+  async getFileUrl(label, locationId) {
+    const file = await this.getFile(label, locationId);
+    return file ? file.url : null;
+  }
 }
