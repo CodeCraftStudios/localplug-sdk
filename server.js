@@ -12,7 +12,7 @@ import { SiteClient } from "./index.js";
 
 if (typeof window !== "undefined") {
   throw new Error(
-    "\n\n🚨 localplugseo/server was imported in the browser.\n\n" +
+    "\n\n🚨 localplug-sdk/server was imported in the browser.\n\n" +
       "This module carries your SECRET site key. Import it only from server code —\n" +
       "route handlers, server components, or getServerSideProps.\n" +
       "For the browser, construct SiteClient with a PUBLIC key instead.\n"

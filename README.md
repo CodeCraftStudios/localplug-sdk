@@ -4,7 +4,7 @@ The **LocalPlug SEO site SDK** — what a client website built by LocalPlug SEO
 runs on. Private; installs from the repo, never npm.
 
 ```bash
-npm install github:CodeCraftStudios/localplugseo-sdk
+npm install github:CodeCraftStudios/localplug-sdk
 ```
 
 This SDK is **paired to the LocalPlug SEO platform**. Keys from any other
