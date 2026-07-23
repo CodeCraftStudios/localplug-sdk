@@ -176,10 +176,14 @@ export declare class FilesModule {
 export declare class FormsModule {
   constructor(client: SiteClient);
   get(formKey: string): Promise<{ form: FormRecord }>;
+  /**
+   * The API stamps ip/user-agent/referer/language/timestamp server-side; pass
+   * `meta` for page-known context (current URL, session id, utm…).
+   */
   submit(
     formKey: string,
     values: Record<string, unknown>,
-    options?: { honeypot?: string }
+    options?: { honeypot?: string; meta?: Record<string, unknown> }
   ): Promise<{ created: true; id?: string }>;
 }
 

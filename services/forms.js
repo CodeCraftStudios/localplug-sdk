@@ -24,20 +24,28 @@ export class FormsModule {
   /**
    * Submit a filled form.
    *
+   * The API stamps server-observed provenance on every submission (ip, user
+   * agent, referer, language, timestamp). Pass `meta` for anything only the
+   * page knows — the current URL, a session id, utm params — and it's stored
+   * alongside; the server's own facts win on key collisions.
+   *
    * @param {string} formKey
    * @param {Object} values  { fieldName: value } — checked against the form's fields
    * @param {Object} [options]
    * @param {string} [options.honeypot]  Value of your hidden form field.
+   * @param {Object} [options.meta]      Extra context: { page, session, utm… }
    *
    * @example
-   * await lps.forms.submit("free-audit", { email: "jane@greenleaf.com", url: "greenleaf.com" });
+   * await lps.forms.submit("free-audit",
+   *   { email: "jane@greenleaf.com", url: "greenleaf.com" },
+   *   { meta: { page: location.href } });
    */
-  async submit(formKey, values, { honeypot } = {}) {
+  async submit(formKey, values, { honeypot, meta } = {}) {
     return this.client._fetch(
       `/api/site/forms/${encodeURIComponent(formKey)}/submissions`,
       {
         method: "POST",
-        body: JSON.stringify({ values, _hp: honeypot || "" }),
+        body: JSON.stringify({ values, _hp: honeypot || "", meta: meta || {} }),
       }
     );
   }
