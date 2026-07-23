@@ -176,17 +176,21 @@ export declare class FormsModule {
 }
 
 export interface SiteLocation {
+  /** Stable location id — what its files are keyed by. */
+  id: string;
   name: string;
   address: string;
   phone: string;
   email: string;
   /** Free text, typically one line per day. */
   hours: string;
-  /** Google Business Profile link. */
-  gbp_url: string;
-  /** Google Maps / directions link. */
-  maps_url: string;
-  image_url: string;
+  /**
+   * Free-form dashboard-authored JSON — GBP link, socials, neighborhood copy,
+   * whatever this site's pages render (e.g. metadata.gpb, metadata.instagram).
+   */
+  metadata: Record<string, unknown>;
+  /** This location's files (photos, menus) from the Files library. */
+  files: SiteFile[];
 }
 
 export declare class LocationsModule {
