@@ -83,6 +83,46 @@ export interface FormRecord {
   updated_at: string;
 }
 
+export interface ProductImage {
+  url: string;
+  alt?: string;
+  [key: string]: unknown;
+}
+
+export interface ProductVariantOption {
+  name: string;
+  /** Absent/null means the product's base price applies. */
+  price?: number | null;
+  [key: string]: unknown;
+}
+
+export interface ProductVariant {
+  /** e.g. "Size", "Flavor". */
+  label: string;
+  options: ProductVariantOption[];
+}
+
+export interface ProductRecord {
+  id: string;
+  type: string;
+  /** Only "active" products are ever served to a site. */
+  status: string;
+  data: {
+    slug?: string;
+    site?: string;
+    name?: string;
+    category?: string;
+    price?: number | string;
+    compare_at_price?: number | string;
+    description?: string;
+    images?: ProductImage[];
+    variants?: ProductVariant[];
+    [key: string]: unknown;
+  };
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Paged {
   total: number;
   limit: number;
@@ -129,6 +169,19 @@ export declare class FormsModule {
   ): Promise<{ created: true; id?: string }>;
 }
 
+export declare class ProductsModule {
+  constructor(client: SiteClient);
+  list(query?: {
+    category?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ products: ProductRecord[] } & Paged>;
+  /** One product by slug. Site-specific beats shared. */
+  get(slug: string): Promise<{ product: ProductRecord }>;
+  /** The product's data, or null on 404 instead of a throw. */
+  data(slug: string): Promise<ProductRecord["data"] | null>;
+}
+
 export declare class SiteClient {
   constructor(options: SiteClientOptions);
 
@@ -142,6 +195,7 @@ export declare class SiteClient {
   content: ContentModule;
   files: FilesModule;
   forms: FormsModule;
+  products: ProductsModule;
 
   whoami(): Promise<SiteWhoami>;
 }
