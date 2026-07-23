@@ -1,5 +1,5 @@
 /**
- * localplugseo — the LocalPlug SEO site SDK.
+ * localplug-sdk — the LocalPlug SEO site SDK.
  *
  * Solution by CodeCraft Studios (https://www.codecraftstudios.net)
  *
@@ -8,7 +8,7 @@
  * dashboard, and it is PAIRED to the LocalPlug SEO platform: a key that belongs
  * to any other platform is rejected on first use.
  *
- *   import { SiteClient } from "localplugseo";
+ *   import { SiteClient } from "localplug-sdk";
  *
  *   const lps = new SiteClient({ key: process.env.NEXT_PUBLIC_LPS_SITE_KEY });
  *   const { content } = await lps.content.list({ section: "home" });
@@ -114,7 +114,7 @@ export class SiteClient {
         if (slug && slug !== PLATFORM_SLUG) {
           this._pairing = null;
           throw new Error(
-            `This key belongs to the '${slug}' platform. The localplugseo SDK is ` +
+            `This key belongs to the '${slug}' platform. The localplug-sdk package is ` +
               `paired to ${PLATFORM_NAME} ('${PLATFORM_SLUG}') and will not serve ` +
               "another platform's sites."
           );

@@ -1,5 +1,5 @@
 {
-  "name": "localplugseo",
+  "name": "localplug-sdk",
   "version": "0.1.0-alpha",
   "description": "LocalPlug SEO site SDK — connects a client website to the LocalPlug SEO platform. Private; not for public distribution.",
   "private": true,

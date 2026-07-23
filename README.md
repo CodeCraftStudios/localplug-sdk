@@ -1,4 +1,4 @@
-# localplugseo
+# localplug-sdk
 
 The **LocalPlug SEO site SDK** — what a client website built by LocalPlug SEO
 runs on. Private; installs from the repo, never npm.
@@ -28,7 +28,7 @@ never put one in a website.
 
 ```js
 // lib/lps.js
-import { createSiteClient } from "localplugseo/server";
+import { createSiteClient } from "localplug-sdk/server";
 
 export const lps = createSiteClient();   // reads LPS_SITE_KEY
 ```
@@ -44,7 +44,7 @@ Public keys may submit leads and forms directly from the browser — that's
 visitor input by nature. Everything else they can only read.
 
 ```js
-import { SiteClient } from "localplugseo";
+import { SiteClient } from "localplug-sdk";
 
 const lps = new SiteClient({
   key: process.env.NEXT_PUBLIC_LPS_SITE_KEY, // public key only

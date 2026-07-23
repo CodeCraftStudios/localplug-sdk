@@ -1,5 +1,5 @@
 /**
- * localplugseo — the LocalPlug SEO site SDK.
+ * localplug-sdk — the LocalPlug SEO site SDK.
  * Paired to the LocalPlug SEO platform; runs on per-site dfd-site-* keys.
  */
 
@@ -250,7 +250,7 @@ export declare class SiteClient {
 
 export default SiteClient;
 
-/** Server-only entry ("localplugseo/server"). */
+/** Server-only entry ("localplug-sdk/server"). */
 export declare function createSiteClient(options?: {
   key?: string;
   baseURL?: string;

@@ -1,7 +1,7 @@
 /**
  * Server-only entry point.
  *
- *   import { createSiteClient } from "localplugseo/server";
+ *   import { createSiteClient } from "localplug-sdk/server";
  *   const lps = createSiteClient();   // reads LPS_SITE_KEY
  *
  * Importing this from a client component throws at module load, so a secret key
