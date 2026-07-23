@@ -178,15 +178,11 @@ export declare class FormsModule {
 export interface SiteLocation {
   /** Stable location id — what its files are keyed by. */
   id: string;
-  name: string;
-  address: string;
-  phone: string;
-  email: string;
-  /** Free text, typically one line per day. */
-  hours: string;
   /**
-   * Free-form dashboard-authored JSON — GBP link, socials, neighborhood copy,
-   * whatever this site's pages render (e.g. metadata.gpb, metadata.instagram).
+   * EVERYTHING about the location, dashboard-authored: conventional keys are
+   * name, address, phone, email, hours, gpb, maps, instagram, facebook,
+   * tiktok, neighborhood, highlights, seo_title, seo_description — but any
+   * shape a site needs can live here.
    */
   metadata: Record<string, unknown>;
   /** This location's files (photos, menus) from the Files library. */
