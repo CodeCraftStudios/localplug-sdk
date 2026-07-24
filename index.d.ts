@@ -166,6 +166,8 @@ export declare class FilesModule {
   constructor(client: SiteClient);
   list(query?: {
     label?: string;
+    /** Folder NAME or full path (e.g. "GALLERY") — how galleries pull a set. */
+    folder?: string;
     limit?: number;
     offset?: number;
   }): Promise<{ files: SiteFile[] } & Paged>;
