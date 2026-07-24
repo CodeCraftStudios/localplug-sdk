@@ -74,6 +74,50 @@ and so does putting one in a `NEXT_PUBLIC_*` variable.
 Submissions are validated server-side, per-IP throttled, and honeypotted — pass
 your hidden field's value as `honeypot` and bots get swallowed silently.
 
+## `<DashImage />`
+
+The LQIP blur-up image component, from the subpath (keeps the client component
+out of server entries):
+
+```jsx
+import { DashImage } from "localplug-sdk/react/DashImage";
+
+<DashImage image={file} alt="Storefront" sizes="(min-width:1024px) 50vw, 100vw" />
+```
+
+`image` is any platform file object (`lps.files`, a location's files, a
+product image) — WebP `srcset` + blur-up kick in automatically when the file
+carries variants; a bare `src` works as a drop-in `<img>` replacement. Add
+`transpilePackages: ["localplug-sdk"]` to `next.config` (it ships `.jsx`).
+
+## `npx localplug build`
+
+Build + CDN deploy in one step — wire it in as the site's build script:
+
+```jsonc
+// package.json
+"scripts": { "build": "localplug build" }
+```
+
+```bash
+npx localplug build          # next build + upload changed assets + activate
+npx localplug build --dry-run
+npx localplug status         # active deployment + the site's asset prefix
+```
+
+It resolves the site's CDN prefix BEFORE `next build` (a runtime-only prefix
+silently kills hydration), builds with `NEXT_PUBLIC_ASSET_PREFIX` baked in,
+uploads only new files (content-addressed dedup) to the site's own namespace,
+and activates atomically. `next.config` needs:
+
+```js
+assetPrefix: process.env.NEXT_PUBLIC_ASSET_PREFIX || undefined,
+```
+
+Auth is the site **secret** key (`LPS_SITE_KEY` in `.env.local`). Anything
+missing or failing degrades to a plain `next build` served from the origin —
+a deploy never goes red because the CDN hiccuped.
+
 ## Local development
 
 ```bash
