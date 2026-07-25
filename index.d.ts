@@ -231,6 +231,51 @@ export declare class ProductsModule {
   data(slug: string): Promise<ProductRecord["data"] | null>;
 }
 
+export interface CategoryRecord {
+  id: string;
+  type: string;
+  /** Only "active" categories are ever served to a site. */
+  status: string;
+  data: {
+    slug?: string;
+    site?: string;
+    project?: string;
+    /** Parent category RECORD ID ("" / absent = root). */
+    parent?: string;
+    name?: string;
+    navbar_name?: string;
+    short_description?: string;
+    /** Rich HTML — the category page's body copy. */
+    description?: string;
+    /** {title, description, keywords, schema} — the page's meta tags. */
+    seo?: Record<string, unknown>;
+    custom_fields?: Record<string, unknown>;
+    display_order?: number;
+    show_in_home?: boolean;
+    [key: string]: unknown;
+  };
+  /**
+   * The category's images from the project's Files library — each optionally
+   * labeled via metadata.label ("main", "hero", "hero_mobile", "og");
+   * unlabeled files are the gallery.
+   */
+  files: SiteFile[];
+  created_at: string;
+  updated_at: string;
+}
+
+export declare class CategoriesModule {
+  constructor(client: SiteClient);
+  /** Every active category (flat — nest via `parent`), by display_order. */
+  list(): Promise<CategoryRecord[]>;
+  /** One category by slug. Site-specific beats shared; 404s reject. */
+  get(slug: string): Promise<CategoryRecord>;
+  /** The category's labeled file ("main", "hero", "og"…), or null. */
+  getFile(slug: string, label: string): Promise<SiteFile | null>;
+  /** Every file WITHOUT a reserved label — the gallery. */
+  gallery(slug: string): Promise<SiteFile[]>;
+}
+
 export declare class SiteClient {
   constructor(options: SiteClientOptions);
 
@@ -241,6 +286,7 @@ export declare class SiteClient {
   readonly isServerSide: boolean;
 
   leads: LeadsModule;
+  categories: CategoriesModule;
   content: ContentModule;
   files: FilesModule;
   forms: FormsModule;
