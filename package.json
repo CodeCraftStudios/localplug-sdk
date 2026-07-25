@@ -22,6 +22,7 @@
       "default": "./server.js"
     },
     "./react/DashImage": {
+      "types": "./react/DashImage.d.ts",
       "import": "./react/DashImage.jsx",
       "default": "./react/DashImage.jsx"
     },
