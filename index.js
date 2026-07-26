@@ -98,10 +98,108 @@ export class SiteClient {
     this.insights = new InsightsModule(this);
     this.products = new ProductsModule(this);
     this.locations = new LocationsModule(this);
+
+    // The "Powered by LocalPlug SEO" strip under the site's footer — browser
+    // only (a secret key already threw above, so this is always a public key).
+    if (typeof window !== "undefined") {
+      this._injectFooterBranding();
+    }
   }
 
   get isServerSide() {
     return typeof window === "undefined";
+  }
+
+  /**
+   * Inject the "Powered by LocalPlug SEO" strip directly beneath the site's
+   * footer. Same mechanics as the dash4devs badge: anchored as the footer's
+   * next sibling (so it lands under the footer on every layout, not just when
+   * <footer> is the last child of <body>), scheduled past hydration, and
+   * skipped when the site already renders its own credit.
+   *
+   * @private
+   */
+  _injectFooterBranding() {
+    const inject = () => {
+      if (document.getElementById("localplugseo-branding")) {
+        return;
+      }
+
+      // Anchor to the LAST footer on the page: a site may mark up more than
+      // one <footer> (e.g. a card footer), and the page's own is the final one.
+      const footers = document.querySelectorAll("footer");
+      const footer = footers[footers.length - 1];
+      if (!footer) {
+        // Footer may not have hydrated yet — retry shortly.
+        setTimeout(inject, 500);
+        return;
+      }
+
+      // Don't double up on an SSR-rendered credit.
+      if (
+        footer.innerHTML.includes("localplugseo.com") ||
+        footer.innerHTML.includes("Powered by LocalPlug SEO")
+      ) {
+        return;
+      }
+
+      const brandingDiv = document.createElement("div");
+      brandingDiv.id = "localplugseo-branding";
+      // Normal-flow strip after the footer — never floats over the page or
+      // pins to the viewport.
+      brandingDiv.style.cssText = `
+        position: static;
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+        text-align: center;
+        padding: 12px 16px;
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.4;
+        color: #6b7280;
+        background: #ffffff;
+        border-top: 1px solid #e5e7eb;
+      `;
+
+      const href = this._brandingHref();
+      brandingDiv.innerHTML = `
+        Powered by <a href="${href}" target="_blank" rel="noopener noreferrer" style="font-weight: 600; color: #0369a1; text-decoration: none;">LocalPlug SEO</a>
+      `;
+
+      footer.insertAdjacentElement("afterend", brandingDiv);
+    };
+
+    // Well past SSR hydration, to prevent hydration mismatches.
+    const schedule =
+      typeof requestIdleCallback === "function"
+        ? requestIdleCallback
+        : (fn) => setTimeout(fn, 2000);
+
+    schedule(() => {
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", inject);
+      } else {
+        inject();
+      }
+    });
+  }
+
+  /**
+   * The badge's link, UTM-tagged with the client site's own domain so
+   * referrals from each site are attributable in analytics.
+   *
+   * @private
+   */
+  _brandingHref() {
+    const url = new URL("https://localplugseo.com/");
+    // hostname, not href: no paths or query strings from the host page leak out.
+    const host = (typeof location !== "undefined" && location.hostname) || "unknown";
+    url.searchParams.set("utm_source", host);
+    url.searchParams.set("utm_medium", "referral");
+    url.searchParams.set("utm_campaign", "powered_by");
+    url.searchParams.set("utm_content", "sdk-badge");
+    return url.toString();
   }
 
   /**
