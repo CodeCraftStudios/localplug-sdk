@@ -140,10 +140,26 @@ export class SiteClient {
       ...options.headers,
     };
 
+    // Server-side GETs under a production Next build use ISR fetch caching —
+    // `cache: "no-store"` here breaks statically-prerendered pages outright
+    // ("Page changed from static to dynamic at runtime" → 500 on every
+    // /[category]) and hammers the API into its per-key rate limit, which
+    // then rejects real traffic like contact submits. Five minutes of cache
+    // keeps content fresh; the global tag gives the platform one handle to
+    // bust everything. Mutations and dev servers stay uncached, and browsers
+    // ignore the `next` option entirely.
+    const method = (options.method || "GET").toUpperCase();
+    const isProd =
+      typeof process !== "undefined" && process.env?.NODE_ENV === "production";
+    const caching =
+      method === "GET" && this.isServerSide && isProd
+        ? { next: { revalidate: 300, tags: ["localplugseo"] } }
+        : { cache: "no-store" };
+
     const response = await fetch(`${this.baseURL}${path}`, {
       ...options,
       headers,
-      cache: "no-store",
+      ...caching,
     });
 
     let payload = null;
