@@ -19,6 +19,7 @@ import { CategoriesModule } from "./services/categories.js";
 import { ContentModule } from "./services/content.js";
 import { FilesModule } from "./services/files.js";
 import { FormsModule } from "./services/forms.js";
+import { InsightsModule } from "./services/insights.js";
 import { ProductsModule } from "./services/products.js";
 import { LocationsModule } from "./services/locations.js";
 
@@ -94,6 +95,7 @@ export class SiteClient {
     this.content = new ContentModule(this);
     this.files = new FilesModule(this);
     this.forms = new FormsModule(this);
+    this.insights = new InsightsModule(this);
     this.products = new ProductsModule(this);
     this.locations = new LocationsModule(this);
   }

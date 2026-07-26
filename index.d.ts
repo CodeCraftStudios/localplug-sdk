@@ -218,6 +218,60 @@ export declare class LocationsModule {
   getFileUrl(label: string, locationId?: string): Promise<string | null>;
 }
 
+/** A stored marketing touch: where the visitor came from. */
+export interface AttributionTouch {
+  source?: string;
+  medium?: string;
+  campaign?: string;
+  term?: string;
+  content?: string;
+  referrer?: string;
+  /** Full landing URL of the touch. */
+  landing?: string;
+  /** ISO timestamp the touch was captured. */
+  at?: string;
+}
+
+export interface InsightsInitOptions {
+  /** Fire pageviews automatically (history patching). Default true. */
+  autoPageviews?: boolean;
+  /** Capture clicks on links/buttons/[data-track]. Default true. */
+  autoClicks?: boolean;
+  /** Buffer flush cadence in ms. Default 8000. */
+  flushIntervalMs?: number;
+}
+
+/**
+ * First-party analytics. Browser-only (every method no-ops on the server) and
+ * silent on every failure — analytics must never break a site. Works with the
+ * PUBLIC site key; events land in the LocalPlug SEO dashboard's Visitors panel.
+ */
+export declare class InsightsModule {
+  constructor(client: SiteClient);
+  /** Start collecting. Idempotent; no-op on the server. */
+  init(options?: InsightsInitOptions): { active: boolean };
+  /** Stop collecting, remove listeners, flush what's buffered. */
+  destroy(): void;
+  /** Track a pageview (automatic unless autoPageviews: false). */
+  pageview(path?: string): void;
+  /** Track a custom event. */
+  track(name: string, props?: Record<string, unknown>): void;
+  /** Record a goal completion (lead sent, booking made…). */
+  conversion(value?: number, props?: Record<string, unknown>): void;
+  /** App Router hook: fires a pageview when the path actually changed. */
+  notifyRouteChange(path?: string): void;
+  getVisitorId(): string;
+  getSessionId(): string;
+  getAttribution(): { ft: AttributionTouch; lt: AttributionTouch };
+  /** Compact payload to attach to a lead/form submission's meta. */
+  attributionForOrder(): {
+    visitor_id: string;
+    session_id: string;
+    ft: AttributionTouch;
+    lt: AttributionTouch;
+  };
+}
+
 export declare class ProductsModule {
   constructor(client: SiteClient);
   list(query?: {
@@ -290,6 +344,7 @@ export declare class SiteClient {
   content: ContentModule;
   files: FilesModule;
   forms: FormsModule;
+  insights: InsightsModule;
   products: ProductsModule;
   locations: LocationsModule;
 

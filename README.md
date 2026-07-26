@@ -69,10 +69,47 @@ and so does putting one in a `NEXT_PUBLIC_*` variable.
 | Content | `lps.content.list({ section })` / `.get(slug)` / `.data(slug)` | Managed copy edited in the dashboard; site-specific rows beat shared ones |
 | Files | `lps.files.list()` / `.get(label)` / `.url(label)` | This site's files + shared brand assets; plain CDN URLs |
 | Forms | `lps.forms.get(key)` / `.submit(key, values, { honeypot })` | Dashboard-built forms; submissions validated against the form's fields |
+| Insights | `lps.insights.init()` / `.track(name, props)` / `.notifyRouteChange()` | First-party analytics — see below |
 | — | `lps.whoami()` | Who am I: site, customer, platform, environment, modules |
 
 Submissions are validated server-side, per-IP throttled, and honeypotted — pass
 your hidden field's value as `honeypot` and bots get swallowed silently.
+
+## Insights — first-party analytics
+
+Self-hosted visitor tracking: pageviews, clicks, sessions, and UTM attribution
+captured into the LocalPlug SEO platform and shown on the website's dashboard
+page. No Google Analytics, no consent-banner gymnastics, no ad-blocker gaps.
+
+Mount once in the root layout (browser, PUBLIC key):
+
+```tsx
+"use client";
+import { useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { lps } from "@/lib/lps";
+
+export default function AnalyticsTracker() {
+  const pathname = usePathname();
+  useEffect(() => {
+    lps.insights.init({ autoPageviews: false, autoClicks: true });
+  }, []);
+  useEffect(() => {
+    lps.insights.notifyRouteChange();
+  }, [pathname]);
+  return null;
+}
+```
+
+- A persistent `visitor_id` (localStorage) carries **first-touch + last-touch
+  UTM attribution** across the whole journey — a visitor who lands on
+  `?utm_source=google` still attributes to google three pages later.
+- Clicks on links, buttons and `[data-track]` elements are captured
+  automatically (opt out any subtree with `data-no-track`).
+- `lps.insights.track("menu_view", { category: "flower" })` for custom events;
+  `lps.insights.conversion(0, { name: "lead" })` for goals.
+- Batched and flushed via `sendBeacon`/keepalive; **every failure is silent** —
+  analytics can never break the site.
 
 ## `<DashImage />`
 
