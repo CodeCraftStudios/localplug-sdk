@@ -15,6 +15,7 @@
  */
 
 import { LeadsModule } from "./services/leads.js";
+import { CustomersModule } from "./services/customers.js";
 import { CategoriesModule } from "./services/categories.js";
 import { ContentModule } from "./services/content.js";
 import { FilesModule } from "./services/files.js";
@@ -91,6 +92,7 @@ export class SiteClient {
     this._pairing = null; // memoized whoami/pairing check
 
     this.leads = new LeadsModule(this);
+    this.customers = new CustomersModule(this);
     this.categories = new CategoriesModule(this);
     this.content = new ContentModule(this);
     this.files = new FilesModule(this);

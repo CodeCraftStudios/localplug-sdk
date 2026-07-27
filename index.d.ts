@@ -151,6 +151,26 @@ export declare class LeadsModule {
   ): Promise<{ created: true; id?: string }>;
 }
 
+export declare class CustomersModule {
+  constructor(client: SiteClient);
+  /**
+   * Email capture (newsletter/loyalty/checkout). Upserts by email — created:
+   * false means the address was already on the list and got refreshed.
+   */
+  subscribe(
+    data: {
+      email: string;
+      name?: string;
+      phone?: string;
+      /** Defaults to the site's domain server-side; pass one to segment. */
+      source?: string;
+      /** Free-form context — page, tags, consent copy shown, anything. */
+      meta?: Record<string, unknown>;
+    },
+    options?: { honeypot?: string }
+  ): Promise<{ created: boolean; id?: string }>;
+}
+
 export declare class ContentModule {
   constructor(client: SiteClient);
   list(query?: {
@@ -340,6 +360,7 @@ export declare class SiteClient {
   readonly isServerSide: boolean;
 
   leads: LeadsModule;
+  customers: CustomersModule;
   categories: CategoriesModule;
   content: ContentModule;
   files: FilesModule;
