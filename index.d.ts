@@ -292,6 +292,87 @@ export declare class InsightsModule {
   };
 }
 
+export interface GiveawayCard {
+  id: string;
+  prize_title: string;
+  prize_description: string;
+  prize_image_url: string;
+  category_url: string;
+  opens_at: string;
+  closes_at: string;
+  announce_at: string;
+  /** "Entries close Tuesday, August 4 at 11:59pm" material. */
+  closes_at_human: string;
+  announce_at_human: string;
+  /** scheduled | open | closed | announced | cancelled — computed server-side. */
+  state: string;
+  /** True when the entry_token passed to list() has an entry on this card. */
+  entered: boolean;
+  /** First name only, set once the winner is announced. */
+  winner_first_name: string | null;
+  sort_order: number;
+}
+
+export interface RecentWinner {
+  name: string;
+  prize_title: string;
+  awarded_on: string;
+}
+
+export interface DealCard {
+  id: string;
+  title: string;
+  description: string;
+  image_url: string;
+  link_url: string;
+  terms: string;
+  /** Empty = valid at all locations. */
+  location_ids: string[];
+  starts_at: string;
+  ends_at: string | null;
+  /** "Ends Sunday", or "" for an ongoing deal. */
+  ends_human: string;
+}
+
+export declare class GiveawaysModule {
+  constructor(client: SiteClient);
+  list(query?: { entry_token?: string }): Promise<{
+    giveaways: GiveawayCard[];
+    recent_winners: RecentWinner[];
+    config: { brand_name: string; publish_line: string } | null;
+  }>;
+  enter(payload: {
+    giveaway_id: string;
+    entry_token?: string;
+    first_name?: string;
+    email?: string;
+    phone?: string;
+    /** YYYY-MM-DD */
+    date_of_birth?: string;
+    sms_consent?: boolean;
+    /** Honeypot — leave empty. */
+    company_website?: string;
+    utm_source?: string;
+    utm_medium?: string;
+    utm_campaign?: string;
+    utm_content?: string;
+    utm_term?: string;
+  }): Promise<{
+    ok: boolean;
+    state?: string;
+    already_entered?: boolean;
+    entry_token?: string;
+    announce_at_human?: string;
+    error?: string;
+    message?: string;
+  }>;
+}
+
+export declare class DealsModule {
+  constructor(client: SiteClient);
+  list(): Promise<{ deals: DealCard[] }>;
+}
+
 export declare class ProductsModule {
   constructor(client: SiteClient);
   list(query?: {
@@ -368,6 +449,8 @@ export declare class SiteClient {
   insights: InsightsModule;
   products: ProductsModule;
   locations: LocationsModule;
+  giveaways: GiveawaysModule;
+  deals: DealsModule;
 
   whoami(): Promise<SiteWhoami>;
 }

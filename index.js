@@ -23,6 +23,7 @@ import { FormsModule } from "./services/forms.js";
 import { InsightsModule } from "./services/insights.js";
 import { ProductsModule } from "./services/products.js";
 import { LocationsModule } from "./services/locations.js";
+import { GiveawaysModule, DealsModule } from "./services/giveaways.js";
 
 /** The one platform this SDK will ever speak for. */
 export const PLATFORM_SLUG = "dispensary-local-seo";
@@ -100,6 +101,8 @@ export class SiteClient {
     this.insights = new InsightsModule(this);
     this.products = new ProductsModule(this);
     this.locations = new LocationsModule(this);
+    this.giveaways = new GiveawaysModule(this);
+    this.deals = new DealsModule(this);
   }
 
   get isServerSide() {
