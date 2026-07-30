@@ -28,7 +28,12 @@ export class GiveawaysModule {
     const params = new URLSearchParams();
     if (query.entry_token) params.set("entry_token", query.entry_token);
     const qs = params.toString();
-    return this.client._fetch(`/api/site/giveaways${qs ? `?${qs}` : ""}`);
+    // `live`: never cached, on any environment. A prize the operator just
+    // added, cancelled, or drew a winner for has to be on the page on the next
+    // request — and the per-visitor `entered` flags can't be shared anyway.
+    return this.client._fetch(`/api/site/giveaways${qs ? `?${qs}` : ""}`, {
+      live: true,
+    });
   }
 
   /**
@@ -67,6 +72,8 @@ export class DealsModule {
    * as adverts (badge, title, one-liner, category link) — never a form.
    */
   async list() {
-    return this.client._fetch(`/api/site/deals`);
+    // Live, same as giveaways: a deal that ended an hour ago must not still be
+    // advertised, and a new one goes up the moment it is saved.
+    return this.client._fetch(`/api/site/deals`, { live: true });
   }
 }

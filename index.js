@@ -139,10 +139,11 @@ export class SiteClient {
   }
 
   async _rawFetch(path, options = {}) {
+    const { live, tags, ...init } = options;
     const headers = {
       "X-Site-Key": this.key,
-      ...(options.body ? { "Content-Type": "application/json" } : {}),
-      ...options.headers,
+      ...(init.body ? { "Content-Type": "application/json" } : {}),
+      ...init.headers,
     };
 
     // Server-side GETs under a production Next build use ISR fetch caching —
@@ -150,19 +151,26 @@ export class SiteClient {
     // ("Page changed from static to dynamic at runtime" → 500 on every
     // /[category]) and hammers the API into its per-key rate limit, which
     // then rejects real traffic like contact submits. Five minutes of cache
-    // keeps content fresh; the global tag gives the platform one handle to
-    // bust everything. Mutations and dev servers stay uncached, and browsers
-    // ignore the `next` option entirely.
-    const method = (options.method || "GET").toUpperCase();
+    // keeps content fresh; the tags give the platform handles to bust it —
+    // the global one, plus whatever the call names. Mutations and dev servers
+    // stay uncached, and browsers ignore the `next` option entirely.
+    //
+    // LIVE CALLS ARE NEVER CACHED. Giveaways and deals change the moment an
+    // operator hits save, and a card that is five minutes stale is a wrong
+    // answer, not a slightly old one: entries close, prizes get pulled,
+    // winners get announced. Those reads pass `live: true` and go straight to
+    // the API every request. They only appear on pages that already declare
+    // `revalidate = 0`, so no static prerender is at risk.
+    const method = (init.method || "GET").toUpperCase();
     const isProd =
       typeof process !== "undefined" && process.env?.NODE_ENV === "production";
     const caching =
-      method === "GET" && this.isServerSide && isProd
-        ? { next: { revalidate: 300, tags: ["localplugseo"] } }
+      method === "GET" && this.isServerSide && isProd && !live
+        ? { next: { revalidate: 300, tags: ["localplugseo", ...(tags || [])] } }
         : { cache: "no-store" };
 
     const response = await fetch(`${this.baseURL}${path}`, {
-      ...options,
+      ...init,
       headers,
       ...caching,
     });
