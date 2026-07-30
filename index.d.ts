@@ -350,7 +350,14 @@ export declare class GiveawaysModule {
     /** YYYY-MM-DD */
     date_of_birth?: string;
     sms_consent?: boolean;
-    /** Honeypot — leave empty. */
+    /**
+     * Honeypot — leave empty. A filled trap no longer discards the submission
+     * on its own; it only suppresses the error message when the payload also
+     * fails validation, so a browser that autofills the field cannot silently
+     * cost the site a real entrant.
+     */
+    hp_url?: string;
+    /** @deprecated Old name for `hp_url`; still read by the API. */
     company_website?: string;
     utm_source?: string;
     utm_medium?: string;

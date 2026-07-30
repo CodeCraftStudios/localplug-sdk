@@ -52,7 +52,12 @@ export class GiveawaysModule {
    * @param {string} [payload.phone]
    * @param {string} [payload.date_of_birth]  YYYY-MM-DD
    * @param {boolean} [payload.sms_consent]
-   * @param {string} [payload.company_website]  Honeypot — leave empty
+   * @param {string} [payload.hp_url]  Honeypot — leave empty. A filled trap no
+   *   longer discards the submission on its own: it only suppresses the error
+   *   message when the payload ALSO fails validation, so a browser that
+   *   autofills the field can't silently cost the site a real entrant.
+   * @param {string} [payload.company_website]  Deprecated name for `hp_url`,
+   *   still read by the API so sites on an older bundle keep their trap.
    */
   async enter(payload) {
     return this.client._fetch(`/api/site/giveaways/enter`, {
