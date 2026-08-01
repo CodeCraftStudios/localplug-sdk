@@ -55,6 +55,14 @@ export declare class KlaviyoModule {
   constructor(client: SiteClient, config?: KlaviyoConfig);
   /** False when this site has no Klaviyo account yet — every call no-ops. */
   readonly configured: boolean;
+  /** Set the account explicitly, overriding whatever load() found. */
+  configure(config: KlaviyoConfig): KlaviyoModule;
+  /**
+   * Fetch this site's account from the platform (GET /api/site/klaviyo), so a
+   * key change is a dashboard save rather than a site redeploy. Called
+   * automatically by entered(). Never throws.
+   */
+  load(): Promise<KlaviyoModule>;
   /** Create/update the profile with every field the form collected. */
   identify(person: KlaviyoPerson): Promise<boolean>;
   /** Subscribe to the brand's list WITH email marketing consent. */

@@ -63,11 +63,54 @@ export class KlaviyoModule {
     this.client = client;
     this.publicKey = (config.publicKey || "").trim();
     this.listId = (config.listId || "").trim();
+    this._loading = null;
   }
 
-  /** Whether this site has been given an account to talk to. */
+  /** Whether this site has an account to talk to. Call after configure/load. */
   get configured() {
     return Boolean(this.publicKey);
+  }
+
+  /** Set the account explicitly, overriding whatever was loaded. */
+  configure({ publicKey, listId } = {}) {
+    if (publicKey !== undefined) this.publicKey = (publicKey || "").trim();
+    if (listId !== undefined) this.listId = (listId || "").trim();
+    return this;
+  }
+
+  /**
+   * Fetch this site's Klaviyo account from the platform.
+   *
+   * Config comes over the wire rather than out of the bundle so that changing
+   * a key or moving a brand to a different list is a save in the dashboard,
+   * not a rebuild and redeploy of the site — NEXT_PUBLIC_* values are inlined
+   * at build time, and a key you cannot rotate without a deploy is a key
+   * nobody rotates.
+   *
+   * Anything passed to the constructor wins, so a site can still pin its own
+   * values (local dev, or a brand not yet configured in the dashboard).
+   * Memoized per client, and a failure is never fatal: it leaves the module
+   * unconfigured, which makes every call a no-op.
+   */
+  async load() {
+    if (this.publicKey) return this;
+    if (!this._loading) {
+      this._loading = this.client
+        ._fetch("/api/site/klaviyo", { live: true })
+        .then((res) => {
+          const cfg = res?.klaviyo || {};
+          if (cfg.public_key) this.publicKey = String(cfg.public_key).trim();
+          if (cfg.list_id && !this.listId) this.listId = String(cfg.list_id).trim();
+          return this;
+        })
+        .catch(() => {
+          // Not configured, module not enabled, or the API is down. The entry
+          // itself already succeeded; this is the part that is allowed to fail.
+          this._loading = null;
+          return this;
+        });
+    }
+    return this._loading;
   }
 
   async _post(path, body) {
@@ -197,7 +240,10 @@ export class KlaviyoModule {
    * error after a successful entry teaches people to enter twice.
    */
   async entered(person, giveaway, options = {}) {
-    if (!this.configured || !person?.email) return { ok: false, skipped: true };
+    if (!person?.email) return { ok: false, skipped: true };
+    // Pulls the brand's account from the platform on first use.
+    await this.load();
+    if (!this.configured) return { ok: false, skipped: true };
 
     const errors = [];
     const attempt = async (label, fn) => {
