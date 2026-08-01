@@ -11,6 +11,73 @@ export interface SiteClientOptions {
   key: string;
   /** Override the API host (local dev). */
   baseURL?: string;
+  /** This brand's OWN Klaviyo account. Every site has its own. */
+  klaviyo?: KlaviyoConfig;
+}
+
+export interface KlaviyoConfig {
+  /**
+   * The PUBLIC key / company id (six characters, e.g. "TWptY6"). Safe in the
+   * browser — it is what Klaviyo's own signup forms ship in page source, and
+   * it can only add to a list, never read one.
+   */
+  publicKey?: string;
+  /** The list this brand subscribes entrants to, e.g. "Uxpwsc". */
+  listId?: string;
+}
+
+/** The person, as the entry form collected them. */
+export interface KlaviyoPerson {
+  email: string;
+  first_name?: string;
+  phone?: string;
+  date_of_birth?: string;
+  sms_consent?: boolean;
+  /** Brand name and domain, for the flow templates. */
+  brand?: string;
+  site?: string;
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_content?: string;
+  utm_term?: string;
+  /** Anything else to set as a profile property. */
+  properties?: Record<string, unknown>;
+}
+
+export declare const KLAVIYO_EVENTS: {
+  ENTERED: "Giveaway Entered";
+  SUBSCRIBED: "Subscriber Created";
+  WON: "Giveaway Won";
+};
+
+export declare class KlaviyoModule {
+  constructor(client: SiteClient, config?: KlaviyoConfig);
+  /** False when this site has no Klaviyo account yet — every call no-ops. */
+  readonly configured: boolean;
+  /** Create/update the profile with every field the form collected. */
+  identify(person: KlaviyoPerson): Promise<boolean>;
+  /** Subscribe to the brand's list WITH email marketing consent. */
+  subscribe(
+    person: KlaviyoPerson,
+    options?: { listId?: string; source?: string },
+  ): Promise<boolean>;
+  /** Fire one event. `uniqueId` makes a repeat call a no-op in Klaviyo. */
+  track(
+    metric: string,
+    email: string,
+    properties?: Record<string, unknown>,
+    options?: { uniqueId?: string; at?: string },
+  ): Promise<boolean>;
+  /**
+   * Profile -> list -> triggers, for one successful entry. Call AFTER the
+   * entry endpoint returns ok. Never throws into the page.
+   */
+  entered(
+    person: KlaviyoPerson,
+    giveaway: Partial<GiveawayCard> & { id: string },
+    options?: { listId?: string; source?: string },
+  ): Promise<{ ok: boolean; skipped?: boolean; errors?: string[] }>;
 }
 
 export interface SiteWhoami {
@@ -458,6 +525,7 @@ export declare class SiteClient {
   locations: LocationsModule;
   giveaways: GiveawaysModule;
   deals: DealsModule;
+  klaviyo: KlaviyoModule;
 
   whoami(): Promise<SiteWhoami>;
 }

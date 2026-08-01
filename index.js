@@ -24,6 +24,7 @@ import { InsightsModule } from "./services/insights.js";
 import { ProductsModule } from "./services/products.js";
 import { LocationsModule } from "./services/locations.js";
 import { GiveawaysModule, DealsModule } from "./services/giveaways.js";
+import { KlaviyoModule } from "./services/klaviyo.js";
 
 /** The one platform this SDK will ever speak for. */
 export const PLATFORM_SLUG = "dispensary-local-seo";
@@ -36,8 +37,12 @@ export class SiteClient {
    * @param {Object} options
    * @param {string} options.key      dfd-site-*-key-* (secret = server-side only)
    * @param {string} [options.baseURL] Override the API host (local dev)
+   * @param {Object} [options.klaviyo] This brand's OWN Klaviyo account —
+   *   `{ publicKey, listId }`. Every site has its own; see services/klaviyo.js.
+   *   Omit it and `lps.klaviyo.configured` is false and every call no-ops, so
+   *   a site that has not been given an account yet still works.
    */
-  constructor({ key, baseURL = "https://api.dashfordevs.com" } = {}) {
+  constructor({ key, baseURL = "https://api.dashfordevs.com", klaviyo } = {}) {
     if (!key) {
       throw new Error(
         "A site key is required. Get one from your LocalPlug SEO dashboard → Websites → your site → API keys."
@@ -103,6 +108,7 @@ export class SiteClient {
     this.locations = new LocationsModule(this);
     this.giveaways = new GiveawaysModule(this);
     this.deals = new DealsModule(this);
+    this.klaviyo = new KlaviyoModule(this, klaviyo || {});
   }
 
   get isServerSide() {
