@@ -28,7 +28,12 @@ import { KlaviyoModule } from "./services/klaviyo.js";
 
 /** The one platform this SDK will ever speak for. */
 export const PLATFORM_SLUG = "dispensary-local-seo";
-export const PLATFORM_NAME = "LocalPlug SEO";
+export // The platform allows 30 requests a minute per key. A build can ask for more
+// than that in a burst, so a 429 is waited out rather than treated as an error.
+const RATE_LIMIT_WINDOW_MS = 61_000;
+const RATE_LIMIT_ATTEMPTS = 4;
+
+const PLATFORM_NAME = "LocalPlug SEO";
 
 const KEY_PATTERN = /^dfd-site-(public|secret)-key-(live|test)-[A-Za-z0-9_-]{20,}$/;
 
@@ -144,7 +149,42 @@ export class SiteClient {
     return this._pairing;
   }
 
+  /**
+   * A GET that hit the per-key rate limit, retried instead of thrown.
+   *
+   * A static build fires every page's loaders at once and blows through the 30
+   * requests/minute limit, and a loader that catches the failure and returns
+   * null makes the page call notFound() — which PRERENDERS A 404 and caches it.
+   * The page then serves 404 to real visitors until someone rebuilds. That is
+   * how /nicotine went missing: a rate-limited request, not a missing record.
+   *
+   * So wait out the window rather than fail. Only idempotent GETs are retried —
+   * replaying a POST could submit a form twice. Writes still throw immediately.
+   */
   async _rawFetch(path, options = {}) {
+    const method = (options.method || "GET").toUpperCase();
+    const attempts = method === "GET" ? RATE_LIMIT_ATTEMPTS : 1;
+
+    for (let i = 0; i < attempts; i++) {
+      try {
+        return await this._sendOnce(path, options);
+      } catch (err) {
+        const last = i === attempts - 1;
+        if (last || err?.status !== 429) throw err;
+        // The limit is a rolling one-minute window, so a short backoff just
+        // burns another attempt inside the same window. Wait the window out.
+        const wait = err.retryAfterMs || RATE_LIMIT_WINDOW_MS;
+        // Always logged: a build that pauses for a minute should say why.
+        console.warn(
+          `[localplug-sdk] rate limited on ${path} — waiting ${Math.round(wait / 1000)}s ` +
+            `(attempt ${i + 1}/${attempts})`
+        );
+        await new Promise((resolve) => setTimeout(resolve, wait));
+      }
+    }
+  }
+
+  async _sendOnce(path, options = {}) {
     const { live, tags, ...init } = options;
     const headers = {
       "X-Site-Key": this.key,
@@ -191,6 +231,11 @@ export class SiteClient {
     if (!response.ok) {
       const error = new Error(payload?.message || `Site API error (${response.status})`);
       error.status = response.status;
+      // Honour the server's own backoff when it sends one.
+      const retryAfter = Number(response.headers?.get?.("retry-after"));
+      if (Number.isFinite(retryAfter) && retryAfter > 0) {
+        error.retryAfterMs = Math.min(retryAfter * 1000, RATE_LIMIT_WINDOW_MS * 2);
+      }
       error.code = payload?.error;
       error.payload = payload;
 
