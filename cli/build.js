@@ -7,7 +7,10 @@
  *      The prefix must be baked into the build: a runtime-only prefix makes
  *      the server emit CDN chunk URLs the client bundle never registered, and
  *      React silently never hydrates (a frozen page with zero errors).
- *   2. `next build` with NEXT_PUBLIC_ASSET_PREFIX in the build env.
+ *   2. Cut responsive image variants for public/ — BEFORE the build, because
+ *      DashImage resolves committed paths against the manifest this writes.
+ *      Generating afterwards ships the ladder to the edge and never uses it.
+ *   3. `next build` with NEXT_PUBLIC_ASSET_PREFIX in the build env.
  *   3. Scan .next/static + public/ → manifest.
  *   4. POST manifest → deploy_id + signed PUT URLs for NEW files only.
  *   5. PUT each file in parallel (ACL + immutable cache ride the signature).
@@ -26,6 +29,8 @@ import { loadConfig } from "./config.js";
 import { createApi } from "./api.js";
 import { scanBuild } from "./scanner.js";
 import { uploadAll, formatBytes } from "./uploader.js";
+import { generateImageVariants } from "./images.js";
+import { report as reportImages } from "./imagesCommand.js";
 
 const PKG_VERSION = "0.2.0-alpha";
 
@@ -38,6 +43,7 @@ export async function run(args) {
   const skipBuild = args.includes("--skip-build");
   const dryRun = args.includes("--dry-run");
   const noActivate = args.includes("--no-activate");
+  const noImages = args.includes("--no-images");
 
   console.log("localplug build");
 
@@ -49,6 +55,9 @@ export async function run(args) {
   } catch (e) {
     warn(`CDN upload disabled: ${e.message}`);
     warn("Falling back to a plain `next build` — assets serve from the origin.");
+    // Variants still run: local work needing no key, and the srcset is worth
+    // just as much when the files come off the origin.
+    if (!noImages) await reportImages(generateImageVariants({ cwd: process.cwd(), publicDir: "public" }));
     await runNextBuild(process.cwd());
     success("Built (no CDN upload)");
     return;
@@ -72,6 +81,13 @@ export async function run(args) {
   if (assetPrefix) {
     writeAssetPrefix(cfg.cwd, assetPrefix);
     step("Asset prefix", assetPrefix);
+  }
+
+  // BEFORE the build: DashImage imports the manifest this writes.
+  if (!noImages) {
+    await reportImages(
+      generateImageVariants({ cwd: cfg.cwd, publicDir: cfg.publicDir || "public" }),
+    );
   }
 
   if (!skipBuild) {

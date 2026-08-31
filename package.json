@@ -1,7 +1,7 @@
 {
   "name": "localplug-sdk",
   "version": "0.4.0-alpha",
-  "description": "LocalPlug SEO site SDK — connects a client website to the LocalPlug SEO platform. Private; not for public distribution.",
+  "description": "LocalPlug SEO site SDK \u2014 connects a client website to the LocalPlug SEO platform. Private; not for public distribution.",
   "private": true,
   "type": "module",
   "main": "./index.js",
@@ -26,13 +26,21 @@
       "import": "./react/DashImage.jsx",
       "default": "./react/DashImage.jsx"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./react/manifest.generated.js": {
+      "import": "./react/manifest.generated.js",
+      "default": "./react/manifest.generated.js"
+    }
   },
   "peerDependencies": {
-    "react": ">=18"
+    "react": ">=18",
+    "sharp": ">=0.33"
   },
   "peerDependenciesMeta": {
     "react": {
+      "optional": true
+    },
+    "sharp": {
       "optional": true
     }
   },
